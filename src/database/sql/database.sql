@@ -13,7 +13,7 @@ CREATE DOMAIN dom_created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
 CREATE DOMAIN dom_amount numeric(8,2) CHECK (VALUE >= 0);
 CREATE DOMAIN dom_volume numeric(6,2) CHECK (VALUE > 0);
 
-CREATE TYPE type_rol AS ENUM ('admin', 'client');
+CREATE TYPE type_role AS ENUM ('admin', 'client');
 CREATE TYPE type_currency AS ENUM ('USD', 'VES');
 CREATE TYPE type_payment_method AS ENUM ('efectivo', 'transferencia', 'tarjeta', 'pago movil');
 CREATE TYPE type_unit_measure AS ENUM ('kg', 'g', 'l', 'ml', 'unidades');
@@ -27,15 +27,15 @@ CREATE TABLE users (
   name dom_name NOT NULL,
   email dom_email,
   password dom_password,
-  rol type_rol NOT NULL,
-  created_at dom_created_at NOT NULL,
+  role type_role NOT NULL,
+  created_at dom_created_at,
   CONSTRAINT users_pk PRIMARY KEY (user_id),
   CONSTRAINT users_unique_email UNIQUE (email),
   CONSTRAINT users_unique_card_id UNIQUE (user_card_id),
   CONSTRAINT check_admin_email 
-    CHECK ((rol = 'admin' AND email IS NOT NULL) OR rol = 'client'),
+    CHECK ((role = 'admin' AND email IS NOT NULL) OR role = 'client'),
   CONSTRAINT check_admin_password 
-    CHECK ((rol = 'admin' AND password IS NOT NULL) OR rol = 'client')
+    CHECK ((role = 'admin' AND password IS NOT NULL) OR role = 'client')
 );
 -- 2
 CREATE TABLE clients (
@@ -46,8 +46,8 @@ CREATE TABLE clients (
   phone_number dom_phone_number DEFAULT NULL,
   email dom_email,
   password dom_password,
-  rol type_rol NOT NULL,
-  created_at dom_created_at NOT NULL,
+  role type_role NOT NULL,
+  created_at dom_created_at,
   CONSTRAINT clients_pk PRIMARY KEY (user_id),
   CONSTRAINT clients_unique_email UNIQUE (email),
   CONSTRAINT clients_unique_card_id UNIQUE (user_card_id),
@@ -64,8 +64,8 @@ CREATE TABLE admins (
   name dom_name NOT NULL,
   email dom_email,
   password dom_password NOT NULL,
-  rol type_rol NOT NULL,
-  created_at dom_created_at NOT NULL,
+  role type_role NOT NULL,
+  created_at dom_created_at,
   CONSTRAINT admins_pk PRIMARY KEY (user_id),
   CONSTRAINT admins_unique_email UNIQUE (email),
   CONSTRAINT admins_unique_card_id UNIQUE (user_card_id),
@@ -83,8 +83,8 @@ CREATE TABLE products (
   sale_price INTEGER NOT NULL,
   brand dom_name NOT NULL,
   available_units INTEGER NOT NULL,
-  created_at dom_created_at NOT NULL,
-  updated_at dom_created_at NOT NULL,
+  created_at dom_created_at,
+  updated_at dom_created_at,
   CONSTRAINT products_pk PRIMARY KEY (product_id),
   CONSTRAINT products_unique_name UNIQUE (name),
   CONSTRAINT check_available_units CHECK (available_units >= 0)
@@ -114,6 +114,7 @@ CREATE TABLE purchases (
   client_id INTEGER,
   purchase_id INTEGER GENERATED ALWAYS AS IDENTITY,
   date dom_created_at NOT NULL,
+  total_purchase_amount dom_amount NOT NULL DEFAULT 0,
   its_paid BOOLEAN NOT NULL DEFAULT FALSE,
   seller_id INTEGER NOT NULL,
   CONSTRAINT purchases_pk PRIMARY KEY (client_id, purchase_id),
@@ -161,12 +162,12 @@ CREATE TABLE correspond (
     ON DELETE RESTRICT
 );
 -- 9
-CREATE TABLE buy (--revisar la pk
+CREATE TABLE buy (
   admin_id INTEGER,
   product_id INTEGER,
   buy_idx INTEGER GENERATED ALWAYS AS IDENTITY,
   units INTEGER NOT NULL,
-  date dom_created_at NOT NULL,
+  date dom_created_at,
   price dom_amount NOT NULL,
   CONSTRAINT buy_pk PRIMARY KEY (admin_id, product_id, buy_idx),
   CONSTRAINT buy_fk_admin FOREIGN KEY (admin_id)
@@ -180,6 +181,7 @@ CREATE TABLE buy (--revisar la pk
 );
 
 -- Functions
+
 -- function to update updated_at column
 CREATE FUNCTION update_updated_at ()
 RETURNS TRIGGER AS $$
@@ -193,12 +195,12 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION insert_client_or_admin()
  RETURNS TRIGGER AS $$
 BEGIN
-  IF NEW.rol = 'client' THEN
-    INSERT INTO clients (user_id, user_card_id, name, rol, created_at)
-    VALUES (NEW.user_id, NEW.user_card_id, NEW.name, NEW.rol, NEW.created_at);
-  ELSIF NEW.rol = 'admin' THEN
-    INSERT INTO admins (user_id, user_card_id, name, email, password, rol, created_at)
-    VALUES (NEW.user_id, NEW.user_card_id, NEW.name, NEW.email, NEW.password, NEW.rol, NEW.created_at);
+  IF NEW.role = 'client' THEN
+    INSERT INTO clients (user_id, user_card_id, name, email, role, created_at)
+    VALUES (NEW.user_id, NEW.user_card_id, NEW.name, NEW.email, NEW.role, NEW.created_at);
+  ELSIF NEW.role = 'admin' THEN
+    INSERT INTO admins (user_id, user_card_id, name, email, password, role, created_at)
+    VALUES (NEW.user_id, NEW.user_card_id, NEW.name, NEW.email, NEW.password, NEW.role, NEW.created_at);
   END IF;
   RETURN NEW;
 END;
@@ -268,16 +270,18 @@ BEGIN
   RETURN total_purchase_paid;
 END;
 $$ LANGUAGE plpgsql;
+
 -- function to calculate total debt purchase per item
 CREATE OR REPLACE FUNCTION calculate_total_debt_purchase(par_client_id INTEGER, par_purchase_id INTEGER)
  RETURNS dom_amount AS $$
  DECLARE
-  total_purchase_amount dom_amount;
+  aux_total_purchase_amount dom_amount;
 BEGIN
-  SELECT SUM(total_item_amount) FROM purchase_details WHERE client_id = par_client_id AND purchase_id = par_purchase_id INTO total_purchase_amount;
-  RETURN total_purchase_amount;
+  SELECT total_purchase_amount FROM purchases WHERE client_id = par_client_id AND purchase_id = par_purchase_id INTO aux_total_purchase_amount;
+  RETURN aux_total_purchase_amount;
 END;
 $$ LANGUAGE plpgsql;
+
 -- function to update amount_paid column - ON CORRESPOND TABLE
 CREATE OR REPLACE FUNCTION update_amount_paid_on_correspond()
  RETURNS TRIGGER AS $$
@@ -286,20 +290,14 @@ CREATE OR REPLACE FUNCTION update_amount_paid_on_correspond()
  total_purchase_amount dom_amount;
  total_purchase_paid dom_amount;
 BEGIN
-  rest_of_payment = calculate_rest_of_payment(NEW.client_id, NEW.purchase_id); --saldo disponible de un pago
-  RAISE NOTICE 'El pago % tiene un saldo de %', NEW.payment_id, rest_of_payment;
-
-  total_purchase_paid = calculate_total_paid_purchase(NEW.client_id, NEW.purchase_id); --total pagado de una compra
-  RAISE NOTICE 'La compra % tiene un total pagado de %', NEW.purchase_id, total_purchase_paid;
-
-  total_purchase_amount = calculate_total_debt_purchase(NEW.client_id, NEW.purchase_id); --total a pagar de una compra
-  RAISE NOTICE 'La compra % tiene un total a pagar de %', NEW.purchase_id, total_purchase_amount;
+  rest_of_payment = calculate_rest_of_payment(NEW.client_id, NEW.purchase_id);
+  total_purchase_amount = calculate_total_debt_purchase(NEW.client_id, NEW.purchase_id);
+  total_purchase_paid = calculate_total_paid_purchase(NEW.client_id, NEW.purchase_id);
 
   IF rest_of_payment = 0 THEN
     RAISE EXCEPTION 'No queda saldo disponible del pago %', NEW.payment_id;
   END IF;
-
-RAISE NOTICE 'El total pagado de la compra % es % el total a pagar es % el saldo disponible del pago % es % y el restante del pago es %', NEW.purchase_id, total_purchase_paid, total_purchase_amount, NEW.payment_id, rest_of_payment ,total_purchase_amount - total_purchase_paid;  
+  
   IF (total_purchase_paid < total_purchase_amount) and (rest_of_payment > (total_purchase_amount - total_purchase_paid)) THEN
     UPDATE correspond
     SET amount_paid = amount_paid + (total_purchase_amount - total_purchase_paid)
@@ -312,9 +310,8 @@ IF rest_of_payment <= (total_purchase_amount - total_purchase_paid) THEN
     WHERE client_id = NEW.client_id AND purchase_id = NEW.purchase_id AND payment_id = NEW.payment_id;
 END IF;
 
-  total_purchase_paid = calculate_total_paid_purchase(NEW.client_id, NEW.purchase_id); --total pagado de una compra
-  RAISE NOTICE 'La compra % tiene un total pagado de %', NEW.purchase_id, total_purchase_paid;
-
+ total_purchase_paid = calculate_total_paid_purchase(NEW.client_id, NEW.purchase_id);
+ 
   IF total_purchase_paid = total_purchase_amount THEN
     UPDATE purchases
     SET its_paid = TRUE
@@ -324,7 +321,29 @@ END IF;
 END;
 $$ LANGUAGE plpgsql;
 
+-- function to update total_purchase_amount column - ON PURCHASES TABLE
+CREATE OR REPLACE FUNCTION update_total_purchase_amount()
+ RETURNS TRIGGER AS $$
+ DECLARE
+  aux_total_purchase_amount dom_amount;
+BEGIN
+  SELECT sum(total_item_amount) 
+    FROM purchase_details 
+    WHERE client_id = NEW.client_id AND purchase_id = NEW.purchase_id INTO aux_total_purchase_amount;
+  UPDATE purchases
+    SET total_purchase_amount = aux_total_purchase_amount
+    WHERE client_id = NEW.client_id AND purchase_id = NEW.purchase_id;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
 -- Triggers
+-- trigger to update total_purchase_amount column - ON PURCHASES TABLE
+CREATE TRIGGER update_total_purchase_amount
+AFTER INSERT ON purchase_details
+FOR EACH ROW
+EXECUTE FUNCTION update_total_purchase_amount();
 
 -- trigger to insert clients and admins in her respective tables - ON USERS TABLE
 CREATE TRIGGER insert_client_or_admin
@@ -356,6 +375,7 @@ AFTER INSERT ON purchase_details
 FOR EACH ROW
 EXECUTE FUNCTION charge_sale_price();
 
+-- trigger to updadte amount_paid column - ON CORRESPOND TABLE
 CREATE OR REPLACE TRIGGER update_amount_paid_on_correspond
 AFTER INSERT ON correspond
 FOR EACH ROW
