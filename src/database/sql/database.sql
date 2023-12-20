@@ -104,6 +104,7 @@ CREATE TABLE payments (
       WHEN currency = 'VES' THEN amount / exchange_rate
     END
   ) STORED,
+  created_at dom_created_at,
   CONSTRAINT payments_pk PRIMARY KEY (payment_id),
   CONSTRAINT check_amount CHECK (amount > 0),
   CONSTRAINT check_exchange_rate CHECK (exchange_rate > 0)

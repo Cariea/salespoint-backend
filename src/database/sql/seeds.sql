@@ -61,6 +61,7 @@ INSERT INTO buy (admin_id, product_id, units, date, price)
 INSERT INTO purchases (client_id, seller_id)
   VALUES 
     (2, 1),
+    (2, 1),
     (3, 1),
     (5, 4),
     (2, 4),
@@ -99,9 +100,9 @@ INSERT INTO purchase_details (client_id, purchase_id, product_id, loaded_units)
 
 INSERT INTO payments (date, amount, currency, reference, exchange_rate, payment_method)
   VALUES 
-    ('2023-01-01', 1.00, 'USD', '1', 35.72, 'efectivo');,
+    ('2023-01-01', 1, 'USD', '1', 35.71, 'efectivo');,
     ('2023-01-02', 30.00, 'USD', '12', 35.72, 'efectivo'),
-    ('2023-01-03', 74.00, 'USD', '2', 35.72, 'efectivo'),
+    ('2023-01-03', 74.00, 'USD', '2', 35.72, 'efectivo');,
     ('2023-01-04', 750.00, 'USD', '23', 35.72, 'efectivo'),
     ('2023-01-05', 120.00, 'USD', '13', 35.72, 'efectivo'),
     ('2023-01-06', 400.00, 'USD', '24', 35.72, 'efectivo'),
@@ -110,9 +111,9 @@ INSERT INTO payments (date, amount, currency, reference, exchange_rate, payment_
 
 INSERT INTO correspond (payment_id, client_id, purchase_id)
   VALUES 
-    (1, 2, 1),
+    (4, 3, 3),
     (2, 2, 2),
-    (3, 3, 3);,
+    (3, 3, 3),
     (4, 2, 4),
     (5, 3, 5),
     (6, 5, 6),
