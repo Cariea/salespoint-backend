@@ -1,16 +1,18 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import { Router } from 'express'
+
+// Schemas
 import { RegisterClientSchema } from './client.schema'
 
 // Middlewares
 import { schemaGuard } from '../../middlewares/schemaGuard'
 
 // Controllers
-import { signUp } from '../clients/actions.ts/register.action'
-import { getAllClients } from '../clients/actions.ts/get-all.action'
-import { getClientByCardId } from './actions.ts/get-by-cardId.action'
-import { updateClient } from './actions.ts/update.action'
-import { deleteClient } from './actions.ts/delete.action'
+import { signUp } from './actions/register.action'
+import { getAllClients } from './actions/get-all.action'
+import { getClientByCardId } from './actions/get-by-cardId.action'
+import { updateClient } from './actions/update.action'
+import { deleteClient } from './actions/delete.action'
 
 const router = Router()
 
