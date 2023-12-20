@@ -7,6 +7,7 @@ import { verifyToken } from '../../middlewares/auth'
 // Routers
 import authRouter from '../auth/auth.routes'
 import clientsRouter from '../clients/client.routes'
+import productsRouter from '../products/product.routes'
 export const router = Router()
 
 // Test endpoint
@@ -22,3 +23,4 @@ router.use(tokenGuard(), verifyToken())
 
 // Secured by token validation endpoints
 router.use('/clients', clientsRouter)
+router.use('/products', productsRouter)
