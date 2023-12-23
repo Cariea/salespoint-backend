@@ -25,7 +25,7 @@ INSERT INTO products (name, unit_measure, volume, sale_price, brand, available_u
 
 INSERT INTO buy (admin_id, product_id, units, date, price)
   VALUES 
-    (1, 1, 55, '2023-01-01', 100.00),
+    (1, 2, 55, '2023-01-01', 100.00),
     (1, 2, 55, '2023-01-01', 100.00),
     (1, 3, 55, '2023-01-01', 100.00),
     (1, 4, 55, '2023-01-01', 100.00),

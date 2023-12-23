@@ -97,7 +97,7 @@ CREATE TABLE purchases (
   purchase_id INTEGER GENERATED ALWAYS AS IDENTITY,
   date dom_created_at NOT NULL,
   total_purchase_amount numeric(8,2) NOT NULL DEFAULT 0,
-  its_paid BOOLEAN NOT NULL DEFAULT FALSE,
+  is_paid BOOLEAN NOT NULL DEFAULT FALSE,
   seller_id INTEGER NOT NULL,
   CONSTRAINT purchases_pk PRIMARY KEY (client_id, purchase_id),
   CONSTRAINT purchases_fk FOREIGN KEY (client_id)
@@ -293,13 +293,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- fuction to update its_paid column on purchases table from payments table
-CREATE OR REPLACE FUNCTION update_its_paid()
+-- fuction to update is_paid column on purchases table from payments table
+CREATE OR REPLACE FUNCTION update_is_paid()
  RETURNS TRIGGER AS $$
  DECLARE
   aux_total_purchase_amount dom_amount;
   aux_rest numeric(8,2);
-  aux_its_paid BOOLEAN DEFAULT TRUE;
+  aux_is_paid BOOLEAN DEFAULT TRUE;
   client_id_option INTEGER;
   purchase_id_option INTEGER;
 BEGIN
@@ -316,12 +316,12 @@ BEGIN
     aux_rest = total_purchase_amount*-1;
   END IF;
   IF aux_rest < 0 THEN
-    aux_its_paid = FALSE;
+    aux_is_paid = FALSE;
   ELSIF aux_rest >= 0 THEN
-    aux_its_paid = TRUE;
+    aux_is_paid = TRUE;
   END IF;
     UPDATE purchases
-    SET its_paid = aux_its_paid
+    SET is_paid = aux_is_paid
     WHERE client_id = client_id_option AND purchase_id = purchase_id_option;
   RETURN NEW;
 END;
@@ -364,10 +364,10 @@ AFTER INSERT ON purchase_details
 FOR EACH ROW
 EXECUTE FUNCTION charge_sale_price();
 
--- trigger to update its_paid column on purchases table from payments table
-CREATE TRIGGER update_its_paid
+-- trigger to update is_paid column on purchases table from payments table
+CREATE TRIGGER update_is_paid
 AFTER INSERT OR DELETE ON payments
 FOR EACH ROW
-EXECUTE FUNCTION update_its_paid();
+EXECUTE FUNCTION update_is_paid();
 
 COMMIT;
