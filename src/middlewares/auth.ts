@@ -15,7 +15,7 @@ interface ExtendedRequestUser {
 }
 
 export interface ExtendedRequest extends Request {
-  user?: any
+  user?: ExtendedRequestUser
   // Esta propiedad almacenará la información del usuario decodificada
 }
 
@@ -37,7 +37,7 @@ export const isAdmin = () =>
   (req: ExtendedRequest, res: Response, next: NextFunction): any => {
     try {
       // Punto Critico
-      const { role } = req.user
+      const role = req.user?.role
       // --
 
       if (role !== UserRole.ADMIN) {
