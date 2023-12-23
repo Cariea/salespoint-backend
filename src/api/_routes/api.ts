@@ -9,6 +9,7 @@ import authRouter from '../auth/auth.routes'
 import clientsRouter from '../clients/client.routes'
 import productsRouter from '../products/product.routes'
 import paymentRouter from '../payments/payment.routes'
+import purchaseRouter from '../purchases/purchase.routes'
 
 export const router = Router()
 
@@ -27,3 +28,4 @@ router.use(tokenGuard(), verifyToken())
 router.use('/clients', clientsRouter)
 router.use('/products', productsRouter)
 router.use('/payments', paymentRouter)
+router.use('/purchases', purchaseRouter)
