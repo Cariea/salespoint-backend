@@ -147,6 +147,7 @@ CREATE TABLE payments (-- sospechoso esta permitiendo null en el fk client_id
     END
   ) STORED,
   created_at dom_created_at,
+  updated_at dom_created_at,
   CONSTRAINT payments_pk PRIMARY KEY (client_id, purchase_id, payment_id),
   CONSTRAINT payments_fk FOREIGN KEY (client_id, purchase_id)
    REFERENCES purchases (client_id, purchase_id)
@@ -154,7 +155,7 @@ CREATE TABLE payments (-- sospechoso esta permitiendo null en el fk client_id
     ON DELETE RESTRICT,
   CONSTRAINT check_amount CHECK (amount > 0),-- esto funciona o intrfiere el dom_amount? que si puede ser 0
   CONSTRAINT check_exchange_rate CHECK (exchange_rate > 0),
-  CONSTRAINT uq_reference UNIQUE (payment_id, reference)
+  CONSTRAINT uq_reference UNIQUE (reference)--esto no sirve todas son diferentes
 );
 
 -- 8
@@ -311,9 +312,12 @@ BEGIN
   END IF;
 
   SELECT total_purchase_amount FROM purchases WHERE client_id = client_id_option AND purchase_id = purchase_id_option INTO aux_total_purchase_amount;
+  IF aux_total_purchase_amount IS NULL THEN
+    aux_total_purchase_amount = 0;
+  END IF;
   SELECT sum(p.amount_in_usd) - aux_total_purchase_amount FROM payments p WHERE p.client_id = client_id_option AND p.purchase_id = purchase_id_option INTO aux_rest;
   IF aux_rest IS NULL THEN
-    aux_rest = total_purchase_amount*-1;
+    aux_rest = aux_total_purchase_amount*-1;
   END IF;
   IF aux_rest < 0 THEN
     aux_is_paid = FALSE;
@@ -352,6 +356,12 @@ BEFORE UPDATE ON products
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at();
 
+-- trigger to update updated_at column - ON PAYMENTS TABLE
+CREATE TRIGGER update_updated_at_payments
+BEFORE UPDATE ON payments
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at();
+
 -- trigger to update available_units column - ON PURCHASE_DETAILS TABLE
 CREATE TRIGGER update_available_units_at_products
 AFTER INSERT OR DELETE ON purchase_details
@@ -366,7 +376,7 @@ EXECUTE FUNCTION charge_sale_price();
 
 -- trigger to update is_paid column on purchases table from payments table
 CREATE TRIGGER update_is_paid
-AFTER INSERT OR DELETE ON payments
+AFTER INSERT OR DELETE OR UPDATE ON payments
 FOR EACH ROW
 EXECUTE FUNCTION update_is_paid();
 
