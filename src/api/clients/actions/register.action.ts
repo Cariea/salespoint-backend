@@ -29,8 +29,8 @@ export const signUp = async (
         `,
       values: [userCardId, name, email, UserRole.CLIENT]
     })
-    console.log(response.rows[0].user_id)
-    const clientResponse = await pool.query({
+
+    await pool.query({
       text: `
           UPDATE clients
           SET
@@ -40,10 +40,9 @@ export const signUp = async (
         `,
       values: [response.rows[0].user_id, phoneNumber, residenceAddress]
     })
-    console.log(clientResponse)
+
     return res.status(STATUS.CREATED).json(camelizeObject(response.rows[0]))
   } catch (error: unknown) {
-    console.log(error)
     return handleControllerError(error, res)
   }
 }
