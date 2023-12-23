@@ -12,6 +12,8 @@ export const getAllPayments = async (
     const response = await pool.query({
       text: `
         SELECT
+          client_id,
+          purchase_id,
           payment_id,
           date,
           amount,

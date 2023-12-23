@@ -9,10 +9,12 @@ export const getPaymentById = async (
   res: Response
 ): Promise<Response> => {
   try {
-    const { paymentId } = req.params
+    const { clientId, purchaseId, paymentId } = req.params
     const response = await pool.query({
       text: `
         SELECT
+          client_id,
+          purchase_id,
           payment_id,
           date,
           amount,
@@ -23,8 +25,10 @@ export const getPaymentById = async (
           amount_in_usd
         FROM payments
         WHERE payment_id = $1
+          AND client_id = $2
+          AND purchase_id = $3
       `,
-      values: [paymentId]
+      values: [paymentId, clientId, purchaseId]
     })
     if (response.rowCount === 0) {
       return res.status(STATUS.NOT_FOUND).json({

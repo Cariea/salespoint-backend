@@ -1,6 +1,14 @@
 import { z } from 'zod'
 
 export const PaymentSchema = z.object({
+  clientId: z
+    .number()
+    .int()
+    .positive('Debe indicar un cliente'),
+  purchaseId: z
+    .number()
+    .int()
+    .positive('Debe indicar una compra'),
   date: z
     .string()
     .optional(),
@@ -19,5 +27,10 @@ export const PaymentSchema = z.object({
     .min(1, 'Debe indicar un tipo de cambio')
     .max(100, 'El tipo de cambio no puede superar los 100'),
   paymentMethod: z
-    .enum(['efectivo', 'transferencia', 'tarjeta', 'pago movil'])
+    .enum(['efectivo', 'transferencia', 'tarjeta', 'pago movil', 'saldo a favor'])
+})
+
+export const PaymentUpdateSchema = PaymentSchema.omit({
+  clientId: true,
+  purchaseId: true
 })

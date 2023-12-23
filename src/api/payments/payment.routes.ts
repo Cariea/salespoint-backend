@@ -2,7 +2,7 @@
 import { Router } from 'express'
 
 // Schemas
-import { PaymentSchema } from './payment.schema'
+import { PaymentSchema, PaymentUpdateSchema } from './payment.schema'
 
 // Middlewares
 import { schemaGuard } from '../../middlewares/schemaGuard'
@@ -19,7 +19,7 @@ const router = Router()
 router.get('/all', getAllPayments)
 router.get('/:paymentId', getPaymentById)
 router.post('/add', schemaGuard(PaymentSchema), addPayment)
-router.put('/:paymentId', schemaGuard(PaymentSchema), updatePayment)
+router.put('/:paymentId', schemaGuard(PaymentUpdateSchema), updatePayment)
 router.delete('/:paymentId', deletePayment)
 
 export default router

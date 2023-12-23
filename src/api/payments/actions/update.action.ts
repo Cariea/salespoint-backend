@@ -30,14 +30,7 @@ export const updatePayment = async (
           payment_method = $6
         WHERE payment_id = $7
         RETURNING
-          payment_id,
-          date,
-          amount,
-          currency,
-          reference,
-          exchange_rate,
-          payment_method,
-          amount_in_usd
+          *
       `,
       values: [
         date,

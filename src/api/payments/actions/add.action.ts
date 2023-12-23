@@ -11,6 +11,8 @@ export const addPayment = async (
 ): Promise<Response> => {
   try {
     const {
+      clientId,
+      purchaseId,
       date,
       amount,
       currency,
@@ -22,6 +24,8 @@ export const addPayment = async (
     const response = await pool.query({
       text: `
         INSERT INTO payments (
+          client_id,
+          purchase_id,
           date,
           amount,
           currency,
@@ -29,18 +33,13 @@ export const addPayment = async (
           exchange_rate,
           payment_method
         )
-        VALUES ($1, $2, $3, $4, $5, $6)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         RETURNING
-          payment_id,
-          date,
-          amount,
-          currency,
-          reference,
-          exchange_rate,
-          payment_method,
-          amount_in_usd
+          *
       `,
       values: [
+        clientId,
+        purchaseId,
         date,
         amount,
         currency,
