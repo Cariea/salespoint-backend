@@ -54,7 +54,7 @@ CREATE TABLE clients (
   CONSTRAINT clients_fk FOREIGN KEY (user_id)
    REFERENCES users (user_id) 
     ON UPDATE CASCADE 
-    ON DELETE RESTRICT
+    ON DELETE CASCADE
 );
 -- 3
 CREATE TABLE admins (

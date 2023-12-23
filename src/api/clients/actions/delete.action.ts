@@ -12,7 +12,7 @@ export const deleteClient = async (
     const { clientId } = req.params
     const response = await pool.query({
       text: `
-        DELETE FROM clients
+        DELETE FROM users
         WHERE user_id = $1
         RETURNING *
       `,
