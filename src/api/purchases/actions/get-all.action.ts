@@ -16,6 +16,11 @@ export const getAllPurchases = async (
         FROM purchases
       `
     })
+    if (response.rowCount === 0) {
+      return res.status(STATUS.NOT_FOUND).json({
+        message: 'No se encontraron compras'
+      })
+    }
     return res.status(STATUS.OK).json(camelizeObject(response.rows))
   } catch (error: unknown) {
     return handleControllerError(error, res)

@@ -276,7 +276,7 @@ CREATE OR REPLACE FUNCTION update_total_purchase_amount()
 BEGIN
   client_id_option = NEW.client_id;
   purchase_id_option = NEW.purchase_id;
-  IF TG_OP = 'DELETE' THEN
+  IF TG_OP = 'DELETE' or TG_OP = 'UPDATE' THEN
     purchase_id_option = OLD.purchase_id;
     client_id_option = OLD.client_id;
   END IF;
@@ -334,7 +334,7 @@ $$ LANGUAGE plpgsql;
 -- Triggers
 -- trigger to update total_purchase_amount column - ON PURCHASES TABLE
 CREATE TRIGGER update_total_purchase_amount
-AFTER INSERT OR DELETE ON purchase_details
+AFTER INSERT OR DELETE OR UPDATE ON purchase_details
 FOR EACH ROW
 EXECUTE FUNCTION update_total_purchase_amount();
 

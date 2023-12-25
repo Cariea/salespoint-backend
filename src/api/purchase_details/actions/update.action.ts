@@ -11,24 +11,21 @@ export const updatePurchaseDetail = async (
   try {
     const { clientId, purchaseId, productId } = req.params
     const {
-      loadedUnits,
-      chargetPrice
+      loadedUnits
     } = req.body
     const response = await pool.query({
       text: `
         UPDATE purchase_details
         SET
-          loaded_units = $1,
-          charget_price = $2
-        WHERE client_id = $3
-          AND purchase_id = $4
-          AND product_id = $5
+          loaded_units = $1
+        WHERE client_id = $2
+          AND purchase_id = $3
+          AND product_id = $4
         RETURNING
           *
       `,
       values: [
         loadedUnits,
-        chargetPrice,
         clientId,
         purchaseId,
         productId
