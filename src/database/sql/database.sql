@@ -209,6 +209,8 @@ CREATE OR REPLACE FUNCTION update_available_units_from_buy() -- tambien tengo qu
  RETURNS TRIGGER AS $$
  DECLARE
   aux_units INTEGER;
+  aux_sells INTEGER;
+  aux_buys INTEGER;
 BEGIN
   IF TG_OP = 'DELETE' THEN
     SELECT available_units FROM products WHERE product_id = OLD.product_id INTO aux_units;
@@ -221,6 +223,13 @@ BEGIN
   ELSIF TG_OP = 'INSERT' THEN
     UPDATE products 
     SET available_units = available_units + NEW.units 
+    WHERE product_id = NEW.product_id;
+  ELSIF TG_OP = 'UPDATE' THEN
+    SELECT sum(units) FROM buy WHERE product_id = NEW.product_id INTO aux_buys;
+    SELECT sum(loaded_units) FROM purchase_details WHERE product_id = NEW.product_id INTO aux_sells;
+    aux_units = aux_buys - aux_sells;
+    UPDATE products 
+    SET available_units = aux_units
     WHERE product_id = NEW.product_id;
   END IF;
   RETURN NEW;
@@ -346,7 +355,7 @@ EXECUTE FUNCTION insert_client_or_admin();
 
 -- trigger to update available_units column - ON BUY TABLE
 CREATE TRIGGER update_available_units
-AFTER INSERT OR DELETE ON buy
+AFTER INSERT OR DELETE OR UPDATE ON buy
 FOR EACH ROW
 EXECUTE FUNCTION update_available_units_from_buy();
 

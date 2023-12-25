@@ -8,3 +8,6 @@ GROUP BY(purchase_id);
 SELECT
     (SELECT SUM(amount_in_usd) FROM payments WHERE client_id = 2) -
     (SELECT SUM(total_purchase_amount) FROM purchases WHERE client_id = 2) AS difference;
+
+SELECT
+    available_units + (SELECT loaded_units FROM purchase_details WHERE purchase_id = 1 AND client_id = 2) AS available_units From products WHERE product_id = 1;
