@@ -12,7 +12,7 @@ import paymentRouter from '../payments/payment.routes'
 import purchaseRouter from '../purchases/purchase.routes'
 import purchaseDetailsRouter from '../purchase_details/purchase-details.routes'
 import buyRouter from '../buy/buy.routes'
-
+import dashboardRoutes from '../dashboard/dashboard.routes'
 export const router = Router()
 
 // Test endpoint
@@ -33,3 +33,4 @@ router.use('/payments', paymentRouter)
 router.use('/purchases', purchaseRouter)
 router.use('/purchase-details', purchaseDetailsRouter)
 router.use('/buy', buyRouter)
+router.use('/dashboard', dashboardRoutes)

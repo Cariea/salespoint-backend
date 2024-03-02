@@ -5,7 +5,7 @@ import { pool } from '../../../database/db'
 import { AUTH_EXPIRE, AUTH_SECRET } from '../../../config/config'
 import { STATUS } from '../../../utils/constants'
 import { User } from '../../../types/index'
-import { StatusError } from '../../../utils/responses/status-error'
+// import { StatusError } from '../../../utils/responses/status-error'
 import { handleControllerError } from '../../../utils/responses/handleControllerError'
 import camelizeObject from '../../../utils/camelizeObject'
 
@@ -21,6 +21,7 @@ export const logIn = async (
 ): Promise<Response | undefined> => {
   try {
     const loginData = getLoginDataFromRequestBody(req)
+    console.log(loginData)
     const { rows } = await pool.query({
       text: `
         SELECT
@@ -44,10 +45,10 @@ export const logIn = async (
         : false
 
     if (rows.length === 0 || !isPasswordCorrect) {
-      throw new StatusError({
-        message: 'Email o Contraseña Incorrecta',
-        statusCode: STATUS.UNAUTHORIZED
-      })
+      return res.status(STATUS.UNAUTHORIZED).json(
+        {
+          message: 'Invalid email or password'
+        })
     }
 
     const userForToken = {
@@ -63,6 +64,7 @@ export const logIn = async (
 
     return res.status(STATUS.ACCEPTED).json({ ...userForToken, token })
   } catch (error: unknown) {
+    console.log(error)
     return handleControllerError(error, res)
   }
 }
