@@ -77,6 +77,7 @@ CREATE TABLE admins (
 CREATE TABLE products (
   product_id INTEGER GENERATED ALWAYS AS IDENTITY,
   serial_number dom_reference DEFAULT NULL,
+  image_url dom_name DEFAULT NULL,
   name dom_name NOT NULL,
   unit_measure type_unit_measure NOT NULL,
   volume dom_volume NOT NULL,

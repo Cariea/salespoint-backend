@@ -7,9 +7,11 @@ import { Router } from 'express'
 
 // Controllers
 import { getDailySalesAmount } from './actions/getDailySalesAmount'
+import { getHistoricalData } from './actions/getHistoricalData'
 
 const router = Router()
 
 router.get('/daily-sales-amount', getDailySalesAmount)
+router.get('/historical-data', getHistoricalData)
 
 export default router
